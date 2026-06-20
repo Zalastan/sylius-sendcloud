@@ -6,7 +6,7 @@ namespace SpiderWeb\Sylius\SendCloudPlugin\EventListener;
 
 use Psr\Log\LoggerInterface;
 use SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient;
-use SpiderWeb\Sylius\SendCloudPlugin\Repository\SendCloudConfigurationRepository;
+use SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 
@@ -14,19 +14,26 @@ final class ShipmentShippedListener
 {
     public function __construct(
         private readonly SendCloudClient $client,
-        private readonly SendCloudConfigurationRepository $configRepository,
         private readonly LoggerInterface $logger,
     ) {}
 
     public function __invoke(TransitionEvent $event): void
     {
-        $config = $this->configRepository->findConfiguration();
-        if ($config === null || !$config->isEnabled()) {
+        $shipment = $event->getSubject();
+        if (!$shipment instanceof ShipmentInterface) {
             return;
         }
 
-        $shipment = $event->getSubject();
-        if (!$shipment instanceof ShipmentInterface) {
+        $method = $shipment->getMethod();
+        if ($method === null || $method->getCalculator() !== SendCloudShippingCalculator::TYPE) {
+            return;
+        }
+
+        $config = $method->getConfiguration();
+        $publicKey = $config['public_key'] ?? null;
+        $privateKey = $config['private_key'] ?? null;
+
+        if ($publicKey === null || $privateKey === null) {
             return;
         }
 
@@ -41,7 +48,7 @@ final class ShipmentShippedListener
         }
 
         try {
-            $parcel = $this->client->createParcel([
+            $parcel = $this->client->createParcel($publicKey, $privateKey, [
                 'name' => trim($address->getFirstName() . ' ' . $address->getLastName()),
                 'address' => $address->getStreet(),
                 'city' => $address->getCity(),

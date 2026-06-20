@@ -4,27 +4,21 @@ declare(strict_types=1);
 
 namespace SpiderWeb\Sylius\SendCloudPlugin\Api;
 
-use SpiderWeb\Sylius\SendCloudPlugin\Encryption\CredentialEncryptor;
-use SpiderWeb\Sylius\SendCloudPlugin\Repository\SendCloudConfigurationRepository;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class SendCloudClient
 {
     private const BASE_URL = 'https://panel.sendcloud.sc/api/v2';
 
-    public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        private readonly CredentialEncryptor $encryptor,
-        private readonly SendCloudConfigurationRepository $configRepository,
-    ) {}
+    public function __construct(private readonly HttpClientInterface $httpClient) {}
 
     /**
      * @param array<string, mixed> $parcelData
-     * @return array<string, mixed>
+     * @param array<string, mixed>
      */
-    public function createParcel(array $parcelData): array
+    public function createParcel(string $publicKey, string $privateKey, array $parcelData): array
     {
-        $response = $this->request('POST', '/parcels', ['parcel' => $parcelData]);
+        $response = $this->request($publicKey, $privateKey, 'POST', '/parcels', ['parcel' => $parcelData]);
 
         return $response['parcel'] ?? $response;
     }
@@ -32,34 +26,17 @@ final class SendCloudClient
     /**
      * @return array<string, mixed>
      */
-    public function getParcel(int $parcelId): array
+    public function getShippingMethods(string $publicKey, string $privateKey): array
     {
-        return $this->request('GET', "/parcels/{$parcelId}");
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getShippingMethods(): array
-    {
-        return $this->request('GET', '/shipping_methods');
+        return $this->request($publicKey, $privateKey, 'GET', '/shipping_methods');
     }
 
     /**
      * @param array<string, mixed>|null $body
      * @return array<string, mixed>
      */
-    private function request(string $method, string $path, ?array $body = null): array
+    private function request(string $publicKey, string $privateKey, string $method, string $path, ?array $body = null): array
     {
-        $config = $this->configRepository->findConfiguration();
-
-        if ($config === null || !$config->isEnabled()) {
-            throw new \RuntimeException('SendCloud is not configured or disabled.');
-        }
-
-        $publicKey = $this->encryptor->decrypt($config->getPublicKey());
-        $privateKey = $this->encryptor->decrypt($config->getPrivateKey());
-
         $options = [
             'auth_basic' => [$publicKey, $privateKey],
             'headers' => ['Content-Type' => 'application/json'],

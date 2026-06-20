@@ -3,26 +3,17 @@ services:
         autowire: true
         autoconfigure: false
 
-    SpiderWeb\Sylius\SendCloudPlugin\Encryption\CredentialEncryptor:
-        arguments:
-            $appSecret: '%kernel.secret%'
+    SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator:
+        tags:
+            - { name: sylius.shipping_calculator, calculator: sendcloud, label: 'spiderweb_sendcloud.ui.calculator_label', form_type: SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudShippingCalculatorType }
 
-    SpiderWeb\Sylius\SendCloudPlugin\Repository\SendCloudConfigurationRepository:
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
+    SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudShippingCalculatorType:
+        tags:
+            - { name: form.type }
 
     SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient:
         arguments:
             $httpClient: '@http_client'
-
-    SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudConfigurationType:
-        tags:
-            - { name: form.type }
-
-    SpiderWeb\Sylius\SendCloudPlugin\Controller\Admin\SendCloudConfigurationController:
-        autoconfigure: true
-        tags:
-            - { name: controller.service_arguments }
 
     SpiderWeb\Sylius\SendCloudPlugin\EventListener\ShipmentShippedListener:
         tags:
