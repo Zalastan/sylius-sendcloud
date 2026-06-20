@@ -8,6 +8,8 @@ services:
             $httpClient: '@http_client'
 
     SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator:
+        arguments:
+            $cache: '@cache.app.simple'
         tags:
             - { name: sylius.shipping_calculator, calculator: sendcloud, label: 'spiderweb_sendcloud.ui.calculator_label', form_type: SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudShippingCalculatorType }
 
@@ -16,5 +18,13 @@ services:
             - { name: form.type }
 
     SpiderWeb\Sylius\SendCloudPlugin\EventListener\ShipmentShippedListener:
+        arguments:
+            $cache: '@cache.app.simple'
         tags:
             - { name: kernel.event_listener, event: workflow.sylius_shipment.transition.ship, priority: 10 }
+
+    SpiderWeb\Sylius\SendCloudPlugin\Controller\SendCloudCheckoutController:
+        autoconfigure: true
+        arguments:
+            $cache: '@cache.app.simple'
+            $shippingMethodRepository: '@sylius.repository.shipping_method'

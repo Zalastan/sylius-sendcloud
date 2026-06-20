@@ -1,5 +1,5 @@
 /vendor/
 /composer.lock
 /.claude/settings.local.json
-    /.idea/
+/.idea/*
 /.junie

@@ -1,0 +1,11 @@
+spiderweb_sendcloud_delivery_options:
+    path: /sendcloud/delivery-options
+    methods: [GET]
+    defaults:
+        _controller: SpiderWeb\Sylius\SendCloudPlugin\Controller\SendCloudCheckoutController::deliveryOptions
+
+spiderweb_sendcloud_select_option:
+    path: /sendcloud/select-option
+    methods: [POST]
+    defaults:
+        _controller: SpiderWeb\Sylius\SendCloudPlugin\Controller\SendCloudCheckoutController::selectOption

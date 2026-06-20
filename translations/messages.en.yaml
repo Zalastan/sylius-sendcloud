@@ -4,6 +4,13 @@ spiderweb_sendcloud:
     form:
         public_key: Public key (SendCloud)
         private_key: Secret key (SendCloud)
-        shipping_option_code: SendCloud option code (e.g. colissimo:home_delivery)
         from_country_code: Sender country (ISO 2 code)
         from_postal_code: Sender postal code
+        enable_checkout_override: Dynamically propose SendCloud options at checkout
+        shipping_option_code: SendCloud option code (e.g. colissimo:home_delivery)
+        shipping_option_code_required: SendCloud option code is required when dynamic mode is disabled.
+    checkout:
+        choose_delivery_option: Choose your delivery option
+        loading_options: Loading SendCloud options…
+        options_error: Unable to load SendCloud delivery options. Please try again.
+        no_options: No delivery options available for this address.

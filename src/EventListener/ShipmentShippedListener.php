@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SpiderWeb\Sylius\SendCloudPlugin\EventListener;
 
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 use SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient;
 use SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator;
 use Sylius\Component\Core\Model\ShipmentInterface;
@@ -14,6 +15,7 @@ final class ShipmentShippedListener
 {
     public function __construct(
         private readonly SendCloudClient $client,
+        private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -47,7 +49,28 @@ final class ShipmentShippedListener
             return;
         }
 
-        $shippingOptionCode = $config['shipping_option_code'] ?? '';
+        $overrideMode = (bool) ($config['enable_checkout_override'] ?? false);
+
+        if ($overrideMode) {
+            $orderToken = $order->getTokenValue();
+            $shippingOptionCode = $orderToken !== null
+                ? $this->cache->get('sendcloud_option_' . $orderToken)
+                : null;
+
+            if (!is_string($shippingOptionCode) || $shippingOptionCode === '') {
+                $this->logger->warning('SendCloud: no selected delivery option found for order {order} in dynamic mode.', [
+                    'order' => $order->getNumber(),
+                ]);
+
+                return;
+            }
+        } else {
+            $shippingOptionCode = $config['shipping_option_code'] ?? '';
+            if ($shippingOptionCode === '') {
+                return;
+            }
+        }
+
         $fromCountryCode = $config['from_country_code'] ?? '';
         $fromPostalCode = $config['from_postal_code'] ?? '';
 

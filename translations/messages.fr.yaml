@@ -4,6 +4,13 @@ spiderweb_sendcloud:
     form:
         public_key: Clé publique (SendCloud)
         private_key: Clé secrète (SendCloud)
-        shipping_option_code: Code option SendCloud (ex. colissimo:home_delivery)
         from_country_code: Pays expéditeur (code ISO 2)
         from_postal_code: Code postal expéditeur
+        enable_checkout_override: Proposer les options SendCloud dynamiquement au checkout
+        shipping_option_code: Code option SendCloud (ex. colissimo:home_delivery)
+        shipping_option_code_required: Le code option SendCloud est requis quand le mode dynamique est désactivé.
+    checkout:
+        choose_delivery_option: Choisissez votre mode de livraison
+        loading_options: Chargement des options SendCloud…
+        options_error: Impossible de charger les options de livraison SendCloud. Veuillez réessayer.
+        no_options: Aucune option de livraison disponible pour cette adresse.

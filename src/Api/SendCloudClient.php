@@ -58,6 +58,33 @@ final class SendCloudClient
     }
 
     /**
+     * Returns all delivery options configured in SendCloud for the given route.
+     * Calls POST /api/v3/checkout/delivery-options.
+     *
+     * @return array<int, array<string, mixed>>
+     * @throws \RuntimeException on API error
+     */
+    public function getDeliveryOptions(
+        string $publicKey,
+        string $privateKey,
+        string $fromCountryCode,
+        string $fromPostalCode,
+        string $toCountryCode,
+        string $toPostalCode,
+        float $weightKg,
+        int $totalPriceCents = 0,
+    ): array {
+        $response = $this->request($publicKey, $privateKey, 'POST', '/checkout/delivery-options', [
+            'from_address' => ['country_code' => $fromCountryCode, 'postal_code' => $fromPostalCode],
+            'to_address' => ['country_code' => $toCountryCode, 'postal_code' => $toPostalCode],
+            'total_weight' => ['value' => number_format($weightKg, 3, '.', ''), 'unit' => 'kg'],
+            'total_price' => ['value' => number_format($totalPriceCents / 100, 2, '.', ''), 'currency' => 'EUR'],
+        ]);
+
+        return $response['delivery_options'] ?? [];
+    }
+
+    /**
      * Creates a parcel and requests a shipping label.
      *
      * @param array<string, mixed> $parcelData

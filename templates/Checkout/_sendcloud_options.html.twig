@@ -1,0 +1,165 @@
+{#
+  Injected at priority -200 in sylius_shop.checkout.select_shipping.content.form.
+  Detects SendCloud methods with enable_checkout_override=true and injects
+  a dynamic delivery options panel driven by JS.
+#}
+{% set form = hookable_metadata.context.form %}
+{% set order = hookable_metadata.context.order %}
+
+{% set sc_methods = {} %}
+{% for form_shipment in form.shipments %}
+    {% for choice in form_shipment.method.vars.choices %}
+        {% set method = choice.data %}
+        {% if method.calculatorType == 'sendcloud' and (method.configuration.enable_checkout_override ?? false) %}
+            {% set sc_methods = sc_methods|merge({(method.id|string): true}) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+{% if sc_methods is not empty %}
+<div id="sendcloud-options-panel" class="card bg-body-tertiary border-0 mb-3" style="display:none;">
+    <div class="card-body">
+        <h6 class="card-title mb-3">{{ 'spiderweb_sendcloud.checkout.choose_delivery_option'|trans }}</h6>
+        <div id="sendcloud-options-loading" class="text-muted small">
+            {{ 'spiderweb_sendcloud.checkout.loading_options'|trans }}
+        </div>
+        <div id="sendcloud-options-list"></div>
+        <div id="sendcloud-options-error" class="alert alert-warning mt-2" style="display:none;">
+            {{ 'spiderweb_sendcloud.checkout.options_error'|trans }}
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const SC_METHODS = {{ sc_methods|json_encode|raw }};
+    const DELIVERY_OPTIONS_URL = '{{ path('spiderweb_sendcloud_delivery_options') }}';
+    const SELECT_OPTION_URL = '{{ path('spiderweb_sendcloud_select_option') }}';
+
+    let currentOrderToken = null;
+
+    function getPanel() { return document.getElementById('sendcloud-options-panel'); }
+    function getLoading() { return document.getElementById('sendcloud-options-loading'); }
+    function getList() { return document.getElementById('sendcloud-options-list'); }
+    function getError() { return document.getElementById('sendcloud-options-error'); }
+
+    function showPanel() { getPanel().style.display = ''; }
+    function hidePanel() {
+        getPanel().style.display = 'none';
+        getList().innerHTML = '';
+        currentOrderToken = null;
+    }
+
+    function formatPrice(option) {
+        const rate = option.shipping_rate;
+        if (rate && rate.value !== null) {
+            return new Intl.NumberFormat('{{ app.request.locale }}', {
+                style: 'currency',
+                currency: rate.currency || 'EUR'
+            }).format(parseFloat(rate.value));
+        }
+        return '';
+    }
+
+    function renderOptions(options, orderToken) {
+        currentOrderToken = orderToken;
+        const list = getList();
+        list.innerHTML = '';
+        getLoading().style.display = 'none';
+        getError().style.display = 'none';
+
+        if (!options || options.length === 0) {
+            list.innerHTML = '<p class="text-muted small mb-0">{{ 'spiderweb_sendcloud.checkout.no_options'|trans }}</p>';
+            return;
+        }
+
+        options.forEach(function (option) {
+            const identifier = (option.checkout_identifier || {}).value || option.id;
+            const title = option.title || option.internal_title || identifier;
+            const price = formatPrice(option);
+            const carrier = (option.carrier || {}).name || '';
+            const logoUrl = (option.carrier || {}).logo_url || '';
+
+            const div = document.createElement('div');
+            div.className = 'card border mb-2';
+            div.style.cursor = 'pointer';
+            div.innerHTML = `
+                <label class="d-flex align-items-center gap-3 card-body py-2 mb-0" style="cursor:pointer;">
+                    <input type="radio" name="sendcloud_delivery_option" value="${identifier}" class="sendcloud-option-radio flex-shrink-0">
+                    ${logoUrl ? `<img src="${logoUrl}" alt="${carrier}" style="height:24px;object-fit:contain;flex-shrink:0;">` : ''}
+                    <span class="flex-grow-1">${title}</span>
+                    ${price ? `<span class="text-end fw-semibold flex-shrink-0">${price}</span>` : ''}
+                </label>`;
+
+            div.querySelector('input').addEventListener('change', function () {
+                saveSelection(identifier);
+                div.closest('#sendcloud-options-list').querySelectorAll('.card').forEach(function (c) {
+                    c.classList.remove('border-primary');
+                });
+                div.classList.add('border-primary');
+            });
+
+            list.appendChild(div);
+        });
+    }
+
+    function saveSelection(optionCode) {
+        if (!currentOrderToken) return;
+        fetch(SELECT_OPTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ option_code: optionCode, order_token: currentOrderToken }),
+        }).catch(function (e) { console.error('SendCloud: failed to save option', e); });
+    }
+
+    function loadOptions(methodId) {
+        getLoading().style.display = '';
+        getList().innerHTML = '';
+        getError().style.display = 'none';
+        showPanel();
+
+        fetch(DELIVERY_OPTIONS_URL + '?method_id=' + methodId)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.error) {
+                    getLoading().style.display = 'none';
+                    getError().style.display = '';
+                } else {
+                    renderOptions(data.options || [], data.order_token);
+                }
+            })
+            .catch(function () {
+                getLoading().style.display = 'none';
+                getError().style.display = '';
+            });
+    }
+
+    function bindRadioListeners() {
+        document.querySelectorAll('input[type="radio"]').forEach(function (radio) {
+            if (SC_METHODS[radio.value]) {
+                radio.addEventListener('change', function () {
+                    if (radio.checked) {
+                        loadOptions(radio.value);
+                    }
+                });
+                if (radio.checked) {
+                    loadOptions(radio.value);
+                }
+            } else {
+                radio.addEventListener('change', function () {
+                    if (radio.checked) {
+                        hidePanel();
+                    }
+                });
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindRadioListeners);
+    } else {
+        bindRadioListeners();
+    }
+})();
+</script>
+{% endif %}
