@@ -1,0 +1,42 @@
+{
+    "name": "spiderweb/sylius-sendcloud-plugin",
+    "description": "Sylius 2 plugin for SendCloud shipping automation",
+    "type": "sylius-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Spider Web",
+            "homepage": "https://www.spider-web.fr"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-sodium": "*",
+        "sylius/core-bundle": "^2.0",
+        "sylius/shipping-bundle": "^2.0",
+        "symfony/form": "^6.4 || ^7.0",
+        "symfony/http-client": "^6.4 || ^7.0",
+        "symfony/routing": "^6.4 || ^7.0",
+        "doctrine/orm": "^2.0 || ^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SpiderWeb\\Sylius\\SendCloudPlugin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SpiderWeb\\Sylius\\SendCloudPlugin\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "sylius-plugin": {
+            "plugin-class": "SpiderWeb\\Sylius\\SendCloudPlugin\\SendCloudPlugin"
+        }
+    },
+    "keywords": ["sendcloud", "shipping", "sylius", "sylius-plugin"],
+    "homepage": "https://www.spider-web.fr"
+}

@@ -1,0 +1,28 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: false
+
+    SpiderWeb\Sylius\SendCloudPlugin\Encryption\CredentialEncryptor:
+        arguments:
+            $appSecret: '%kernel.secret%'
+
+    SpiderWeb\Sylius\SendCloudPlugin\Repository\SendCloudConfigurationRepository:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient:
+        arguments:
+            $httpClient: '@http_client'
+
+    SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudConfigurationType:
+        tags:
+            - { name: form.type }
+
+    SpiderWeb\Sylius\SendCloudPlugin\Controller\Admin\SendCloudConfigurationController:
+        tags:
+            - { name: controller.service_arguments }
+
+    SpiderWeb\Sylius\SendCloudPlugin\EventListener\ShipmentShippedListener:
+        tags:
+            - { name: kernel.event_listener, event: workflow.sylius_shipment.transition.ship, priority: 10 }

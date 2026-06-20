@@ -1,0 +1,4 @@
+spiderweb_sendcloud_admin_configuration:
+    path: /admin/sendcloud/configuration
+    controller: SpiderWeb\Sylius\SendCloudPlugin\Controller\Admin\SendCloudConfigurationController
+    methods: [GET, POST]

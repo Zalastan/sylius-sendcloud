@@ -1,0 +1,15 @@
+spiderweb_sendcloud:
+    ui:
+        configuration_subtitle: Shipping automation via SendCloud
+        api_credentials: API Credentials
+        status: Connection status
+        status_active: Active — shipments will be sent to SendCloud automatically
+        status_disabled: Disabled — no shipments will be sent
+        encryption_notice: API keys are encrypted in the database using your application secret key.
+        private_key_help: Secret key from your SendCloud account (Settings → Integrations → API).
+        configuration_saved: SendCloud configuration saved successfully.
+    form:
+        public_key: Public key
+        private_key: Secret key
+        enabled: Enable SendCloud integration
+        key_edit_hint: Leave blank to keep the current value.
