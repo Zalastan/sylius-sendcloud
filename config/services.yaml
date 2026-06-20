@@ -20,6 +20,7 @@ services:
             - { name: form.type }
 
     SpiderWeb\Sylius\SendCloudPlugin\Controller\Admin\SendCloudConfigurationController:
+        autoconfigure: true
         tags:
             - { name: controller.service_arguments }
 
