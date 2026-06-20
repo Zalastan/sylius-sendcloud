@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SpiderWeb\Sylius\SendCloudPlugin\Controller;
 
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient;
 use SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -20,7 +20,7 @@ final class SendCloudCheckoutController
         private readonly SendCloudClient $client,
         private readonly CartContextInterface $cartContext,
         private readonly ShippingMethodRepositoryInterface $shippingMethodRepository,
-        private readonly CacheInterface $cache,
+        private readonly CacheItemPoolInterface $cache,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -101,7 +101,10 @@ final class SendCloudCheckoutController
             return new JsonResponse(['error' => 'Missing order_token'], 400);
         }
 
-        $this->cache->set('sendcloud_option_' . $orderToken, $optionCode, 7 * 24 * 3600);
+        $item = $this->cache->getItem('sendcloud_option_' . $orderToken);
+        $item->set($optionCode);
+        $item->expiresAfter(7 * 24 * 3600);
+        $this->cache->save($item);
 
         return new JsonResponse(['success' => true]);
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SpiderWeb\Sylius\SendCloudPlugin\EventListener;
 
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient;
 use SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator;
 use Sylius\Component\Core\Model\ShipmentInterface;
@@ -15,7 +15,7 @@ final class ShipmentShippedListener
 {
     public function __construct(
         private readonly SendCloudClient $client,
-        private readonly CacheInterface $cache,
+        private readonly CacheItemPoolInterface $cache,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -53,11 +53,14 @@ final class ShipmentShippedListener
 
         if ($overrideMode) {
             $orderToken = $order->getTokenValue();
-            $shippingOptionCode = $orderToken !== null
-                ? $this->cache->get('sendcloud_option_' . $orderToken)
+            $cacheItem = $orderToken !== null
+                ? $this->cache->getItem('sendcloud_option_' . $orderToken)
                 : null;
+            $shippingOptionCode = ($cacheItem !== null && $cacheItem->isHit())
+                ? (string) $cacheItem->get()
+                : '';
 
-            if (!is_string($shippingOptionCode) || $shippingOptionCode === '') {
+            if ($shippingOptionCode === '') {
                 $this->logger->warning('SendCloud: no selected delivery option found for order {order} in dynamic mode.', [
                     'order' => $order->getNumber(),
                 ]);

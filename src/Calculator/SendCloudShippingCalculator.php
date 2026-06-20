@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SpiderWeb\Sylius\SendCloudPlugin\Calculator;
 
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient;
 use Sylius\Component\Core\Model\ShipmentInterface as CoreShipmentInterface;
 use Sylius\Component\Shipping\Calculator\CalculatorInterface;
@@ -21,7 +21,7 @@ final class SendCloudShippingCalculator implements CalculatorInterface
     public function __construct(
         private readonly SendCloudClient $client,
         private readonly LoggerInterface $logger,
-        private readonly CacheInterface $cache,
+        private readonly CacheItemPoolInterface $cache,
     ) {}
 
     /** @param array<string, mixed> $configuration */
@@ -72,7 +72,6 @@ final class SendCloudShippingCalculator implements CalculatorInterface
         return self::TYPE;
     }
 
-    /** @param \Sylius\Component\Core\Model\AddressInterface $address */
     private function calculateFromSelectedOption(
         CoreShipmentInterface $subject,
         string $publicKey,
@@ -86,8 +85,10 @@ final class SendCloudShippingCalculator implements CalculatorInterface
             return 0;
         }
 
-        $optionCode = $this->cache->get('sendcloud_option_' . $orderToken);
-        if (!is_string($optionCode) || $optionCode === '') {
+        $cacheItem = $this->cache->getItem('sendcloud_option_' . $orderToken);
+        $optionCode = $cacheItem->isHit() ? (string) $cacheItem->get() : '';
+
+        if ($optionCode === '') {
             return 0;
         }
 
