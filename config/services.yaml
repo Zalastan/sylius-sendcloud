@@ -3,6 +3,10 @@ services:
         autowire: true
         autoconfigure: false
 
+    SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient:
+        arguments:
+            $httpClient: '@http_client'
+
     SpiderWeb\Sylius\SendCloudPlugin\Calculator\SendCloudShippingCalculator:
         tags:
             - { name: sylius.shipping_calculator, calculator: sendcloud, label: 'spiderweb_sendcloud.ui.calculator_label', form_type: SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudShippingCalculatorType }
@@ -10,10 +14,6 @@ services:
     SpiderWeb\Sylius\SendCloudPlugin\Form\Type\SendCloudShippingCalculatorType:
         tags:
             - { name: form.type }
-
-    SpiderWeb\Sylius\SendCloudPlugin\Api\SendCloudClient:
-        arguments:
-            $httpClient: '@http_client'
 
     SpiderWeb\Sylius\SendCloudPlugin\EventListener\ShipmentShippedListener:
         tags:

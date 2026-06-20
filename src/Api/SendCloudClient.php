@@ -8,27 +8,68 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class SendCloudClient
 {
-    private const BASE_URL = 'https://panel.sendcloud.sc/api/v2';
+    private const BASE_URL = 'https://panel.sendcloud.sc/api/v3';
 
     public function __construct(private readonly HttpClientInterface $httpClient) {}
 
     /**
-     * @param array<string, mixed> $parcelData
-     * @param array<string, mixed>
+     * Returns the shipping price in cents for the given option and addresses.
+     * Calls POST /api/v3/shipping-options with calculate_quotes=true.
+     *
+     * @throws \RuntimeException on API error or option not found
      */
-    public function createParcel(string $publicKey, string $privateKey, array $parcelData): array
-    {
-        $response = $this->request($publicKey, $privateKey, 'POST', '/parcels', ['parcel' => $parcelData]);
+    public function getShippingOptionPrice(
+        string $publicKey,
+        string $privateKey,
+        string $shippingOptionCode,
+        string $fromCountryCode,
+        string $fromPostalCode,
+        string $toCountryCode,
+        string $toPostalCode,
+        float $weightKg,
+    ): int {
+        $response = $this->request($publicKey, $privateKey, 'POST', '/shipping-options', [
+            'from_address' => [
+                'country_code' => $fromCountryCode,
+                'postal_code' => $fromPostalCode,
+            ],
+            'to_address' => [
+                'country_code' => $toCountryCode,
+                'postal_code' => $toPostalCode,
+            ],
+            'parcels' => [
+                ['weight' => ['value' => (string) round($weightKg, 3), 'unit' => 'kg']],
+            ],
+            'shipping_option_code' => $shippingOptionCode,
+            'calculate_quotes' => true,
+        ]);
 
-        return $response['parcel'] ?? $response;
+        $option = $response['data'][0] ?? null;
+        if ($option === null) {
+            throw new \RuntimeException(sprintf('SendCloud returned no shipping option for code "%s".', $shippingOptionCode));
+        }
+
+        $priceValue = $option['quotes'][0]['price']['total']['value'] ?? null;
+        if ($priceValue === null) {
+            throw new \RuntimeException(sprintf('SendCloud returned no price quote for option "%s".', $shippingOptionCode));
+        }
+
+        return (int) round((float) $priceValue * 100);
     }
 
     /**
+     * Creates a parcel and requests a shipping label.
+     *
+     * @param array<string, mixed> $parcelData
      * @return array<string, mixed>
      */
-    public function getShippingMethods(string $publicKey, string $privateKey): array
+    public function createParcel(string $publicKey, string $privateKey, array $parcelData): array
     {
-        return $this->request($publicKey, $privateKey, 'GET', '/shipping_methods');
+        $response = $this->request($publicKey, $privateKey, 'POST', '/shipments', [
+            'shipments' => [$parcelData],
+        ]);
+
+        return $response['data'][0] ?? $response;
     }
 
     /**
@@ -40,7 +81,7 @@ final class SendCloudClient
         $options = [
             'auth_basic' => [$publicKey, $privateKey],
             'headers' => ['Content-Type' => 'application/json'],
-            'timeout' => 10,
+            'timeout' => 5,
         ];
 
         if ($body !== null) {

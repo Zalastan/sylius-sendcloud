@@ -4,4 +4,6 @@ spiderweb_sendcloud:
     form:
         public_key: Clé publique (SendCloud)
         private_key: Clé secrète (SendCloud)
-        amount: Coût de livraison (en centimes)
+        shipping_option_code: Code option SendCloud (ex. colissimo:home_delivery)
+        from_country_code: Pays expéditeur (code ISO 2)
+        from_postal_code: Code postal expéditeur

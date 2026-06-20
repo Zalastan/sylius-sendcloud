@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace SpiderWeb\Sylius\SendCloudPlugin\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\PositiveOrZero;
 
 final class SendCloudShippingCalculatorType extends AbstractType
 {
@@ -26,9 +24,20 @@ final class SendCloudShippingCalculatorType extends AbstractType
                 'always_empty' => false,
                 'constraints' => [new NotBlank()],
             ])
-            ->add('amount', IntegerType::class, [
-                'label' => 'spiderweb_sendcloud.form.amount',
-                'constraints' => [new NotBlank(), new PositiveOrZero()],
+            ->add('shipping_option_code', TextType::class, [
+                'label' => 'spiderweb_sendcloud.form.shipping_option_code',
+                'constraints' => [new NotBlank()],
+                'attr' => ['placeholder' => 'ex: colissimo:home_delivery'],
+            ])
+            ->add('from_country_code', TextType::class, [
+                'label' => 'spiderweb_sendcloud.form.from_country_code',
+                'constraints' => [new NotBlank()],
+                'attr' => ['placeholder' => 'ex: FR'],
+            ])
+            ->add('from_postal_code', TextType::class, [
+                'label' => 'spiderweb_sendcloud.form.from_postal_code',
+                'constraints' => [new NotBlank()],
+                'attr' => ['placeholder' => 'ex: 75001'],
             ])
         ;
     }

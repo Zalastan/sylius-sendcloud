@@ -47,22 +47,35 @@ final class ShipmentShippedListener
             return;
         }
 
+        $shippingOptionCode = $config['shipping_option_code'] ?? '';
+        $fromCountryCode = $config['from_country_code'] ?? '';
+        $fromPostalCode = $config['from_postal_code'] ?? '';
+
         try {
             $parcel = $this->client->createParcel($publicKey, $privateKey, [
-                'name' => trim($address->getFirstName() . ' ' . $address->getLastName()),
-                'address' => $address->getStreet(),
-                'city' => $address->getCity(),
-                'postal_code' => $address->getPostcode(),
-                'country' => ['iso_2' => $address->getCountryCode()],
-                'telephone' => $address->getPhoneNumber() ?? '',
-                'email' => $order->getCustomer()?->getEmail() ?? '',
+                'shipping_option_code' => $shippingOptionCode,
+                'to_address' => [
+                    'name' => trim($address->getFirstName() . ' ' . $address->getLastName()),
+                    'address_line_1' => $address->getStreet(),
+                    'city' => $address->getCity(),
+                    'postal_code' => $address->getPostcode(),
+                    'country_code' => $address->getCountryCode(),
+                    'phone_number' => $address->getPhoneNumber() ?? '',
+                    'email' => $order->getCustomer()?->getEmail() ?? '',
+                ],
+                'from_address' => [
+                    'country_code' => $fromCountryCode,
+                    'postal_code' => $fromPostalCode,
+                ],
+                'parcels' => [[
+                    'weight' => ['value' => $this->resolveWeightInKg($shipment), 'unit' => 'kg'],
+                ]],
                 'order_number' => (string) $order->getNumber(),
-                'weight' => $this->resolveWeightInKg($shipment),
                 'request_label' => true,
             ]);
 
-            if (isset($parcel['tracking_number'])) {
-                $shipment->setTracking($parcel['tracking_number']);
+            if (isset($parcel['tracking_number']) || isset($parcel['tracking'])) {
+                $shipment->setTracking($parcel['tracking_number'] ?? $parcel['tracking']);
             }
         } catch (\Throwable $e) {
             $this->logger->error('SendCloud parcel creation failed for order {order}: {message}', [
