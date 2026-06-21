@@ -10,7 +10,7 @@
 {% for form_shipment in form.shipments %}
     {% for choice in form_shipment.method.vars.choices %}
         {% set method = choice.data %}
-        {% if method.calculatorType == 'sendcloud' and (method.configuration.enable_checkout_override ?? false) %}
+        {% if method.calculator == 'sendcloud' and (method.configuration.enable_checkout_override ?? false) %}
             {% set sc_methods = sc_methods|merge({(method.id ~ ''): true}) %}
         {% endif %}
     {% endfor %}
