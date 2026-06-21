@@ -86,7 +86,26 @@ final class SendCloudShippingCalculator implements CalculatorInterface
         }
 
         $cacheItem = $this->cache->getItem('sendcloud_option_' . $orderToken);
-        $optionCode = $cacheItem->isHit() ? (string) $cacheItem->get() : '';
+        if (!$cacheItem->isHit()) {
+            return 0;
+        }
+
+        $cached = $cacheItem->get();
+
+        // New format: ['code' => '...', 'price_cents' => 450]
+        if (is_array($cached)) {
+            $optionCode = (string) ($cached['code'] ?? '');
+            if ($optionCode === '') {
+                return 0;
+            }
+            // Use cached price to avoid redundant API call
+            if (isset($cached['price_cents'])) {
+                return (int) $cached['price_cents'];
+            }
+        } else {
+            // Legacy format: plain string option code
+            $optionCode = (string) $cached;
+        }
 
         if ($optionCode === '') {
             return 0;

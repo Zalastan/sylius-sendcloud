@@ -123,7 +123,7 @@ final class SendCloudShippingOptionsComponent
     }
 
     #[LiveAction]
-    public function select(#[LiveArg] string $optionCode): void
+    public function select(#[LiveArg] string $optionCode, #[LiveArg] int $priceCents = 0): void
     {
         $orderToken = $this->getOrderToken();
         if ($orderToken === null || $optionCode === '') {
@@ -131,7 +131,7 @@ final class SendCloudShippingOptionsComponent
         }
 
         $item = $this->cache->getItem('sendcloud_option_' . $orderToken);
-        $item->set($optionCode);
+        $item->set(['code' => $optionCode, 'price_cents' => $priceCents]);
         $item->expiresAfter(7 * 24 * 3600);
         $this->cache->save($item);
 

@@ -18,6 +18,8 @@
                 {% set logoUrl = option.carrier.logo_url ?? '' %}
                 {% set carrierName = option.carrier.name ?? '' %}
                 {% set rate = option.shipping_rate ?? {} %}
+                {% set rateValue = rate.value ?? null %}
+                {% set priceCents = rateValue is not null ? (rateValue * 100)|round|int : 0 %}
                 {% set isSelected = this.selectedOptionCode == identifier %}
 
                 <div class="card {{ isSelected ? 'border-primary' : 'border' }} mb-2">
@@ -31,6 +33,7 @@
                             data-action="change->live#action"
                             data-live-action-param="select"
                             data-live-option-code-param="{{ identifier }}"
+                            data-live-price-cents-param="{{ priceCents }}"
                         >
                         {% if logoUrl %}
                             <img
@@ -40,9 +43,9 @@
                             >
                         {% endif %}
                         <span class="flex-grow-1">{{ title }}</span>
-                        {% if rate.value is defined and rate.value is not null %}
+                        {% if rateValue is not null %}
                             <span class="fw-semibold flex-shrink-0">
-                                {{ rate.value|number_format(2, ',', '\u{202F}') }}&nbsp;{{ rate.currency ?? 'EUR' }}
+                                {{ rateValue|number_format(2, ',', '\u{202F}') }}&nbsp;{{ rate.currency ?? 'EUR' }}
                             </span>
                         {% endif %}
                     </label>

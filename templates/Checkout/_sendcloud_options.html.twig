@@ -1,17 +1,32 @@
 {% set form = hookable_metadata.context.form %}
 
 {% for form_shipment in form.shipments %}
+    {# Collect SendCloud methods with dynamic override enabled #}
+    {% set overrideMethods = [] %}
     {% for choice in form_shipment.method.vars.choices %}
         {% set method = choice.data %}
         {% if method.calculator == 'sendcloud' and (method.configuration.enable_checkout_override ?? false) %}
+            {% set overrideMethods = overrideMethods|merge([method]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% if overrideMethods|length > 0 %}
+        {# Hide ALL static shipping method cards for this shipment — SendCloud takes over completely #}
+        <style>
+            .card:has(input[name="{{ form_shipment.method.vars.full_name }}"]) {
+                display: none !important;
+            }
+        </style>
+
+        {% for method in overrideMethods %}
             <div
                 id="sendcloud-panel-{{ method.id }}"
-                class="mb-3"
+                class="mb-5"
                 data-controller="sendcloud-shipping-options"
                 data-sendcloud-shipping-options-method-id-value="{{ method.id }}"
             >
                 {{ component('sendcloud_shipping_options', { methodId: method.id }) }}
             </div>
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
 {% endfor %}

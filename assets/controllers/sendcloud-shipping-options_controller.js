@@ -8,7 +8,6 @@ export default class extends Controller {
     #observer = null;
 
     connect() {
-        this.#positionPanel();
         this.#watchForSelection();
         this.#syncSyliusRadio();
     }
@@ -16,17 +15,6 @@ export default class extends Controller {
     disconnect() {
         this.#observer?.disconnect();
         this.#observer = null;
-    }
-
-    #positionPanel() {
-        const radio = this.#syliusRadio();
-        if (!radio) return;
-
-        const staticCard = radio.closest('.card');
-        if (!staticCard?.parentNode) return;
-
-        staticCard.style.display = 'none';
-        staticCard.parentNode.insertBefore(this.element, staticCard.nextSibling);
     }
 
     #watchForSelection() {
@@ -54,6 +42,6 @@ export default class extends Controller {
     }
 
     #syliusRadio() {
-        return document.querySelector(`input[type="radio"][value="${this.methodIdValue}"]`);
+        return document.querySelector(`input[type="radio"][name*="[method]"][value="${this.methodIdValue}"]`);
     }
 }

@@ -1,5 +1,6 @@
 {
     "name": "spiderweb/sylius-sendcloud-plugin",
+    "version": "1.5.0",
     "description": "Sylius 2 plugin for SendCloud shipping automation",
     "type": "sylius-plugin",
     "license": "MIT",

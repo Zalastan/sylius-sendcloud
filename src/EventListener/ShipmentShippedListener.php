@@ -56,9 +56,15 @@ final class ShipmentShippedListener
             $cacheItem = $orderToken !== null
                 ? $this->cache->getItem('sendcloud_option_' . $orderToken)
                 : null;
-            $shippingOptionCode = ($cacheItem !== null && $cacheItem->isHit())
-                ? (string) $cacheItem->get()
-                : '';
+
+            $shippingOptionCode = '';
+            if ($cacheItem !== null && $cacheItem->isHit()) {
+                $cached = $cacheItem->get();
+                // New format: ['code' => '...', 'price_cents' => 450]
+                $shippingOptionCode = is_array($cached)
+                    ? (string) ($cached['code'] ?? '')
+                    : (string) $cached;
+            }
 
             if ($shippingOptionCode === '') {
                 $this->logger->warning('SendCloud: no selected delivery option found for order {order} in dynamic mode.', [
