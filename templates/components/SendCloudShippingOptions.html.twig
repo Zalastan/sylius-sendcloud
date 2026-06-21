@@ -19,7 +19,7 @@
                 {% set carrierName = option.carrier.name ?? '' %}
                 {% set rate = option.shipping_rate ?? {} %}
                 {% set rateValue = rate.value ?? null %}
-                {% set priceCents = rateValue is not null ? (rateValue * 100)|round|int : 0 %}
+                {% set priceCents = rateValue is not null ? ((rateValue * 100)|round(0, 'floor')) : 0 %}
                 {% set isSelected = this.selectedOptionCode == identifier %}
 
                 <div class="card {{ isSelected ? 'border-primary' : 'border' }} mb-2">
