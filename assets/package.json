@@ -1,0 +1,14 @@
+{
+    "name": "@spiderweb/sendcloud-plugin",
+    "description": "Assets for spiderweb/sylius-sendcloud-plugin",
+    "symfony": {
+        "controllers": {
+            "sendcloud-shipping-options": {
+                "main": "controllers/sendcloud-shipping-options_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            }
+        },
+        "importmap": []
+    }
+}

@@ -1,0 +1,53 @@
+<div
+    data-sendcloud-method-id="{{ this.methodId }}"
+    data-sendcloud-selected="{{ this.selectedOptionCode }}"
+>
+    {% if this.hasFetchError() %}
+        <div class="alert alert-warning mb-0">
+            {{ 'spiderweb_sendcloud.checkout.options_error'|trans }}
+        </div>
+    {% else %}
+        {% set options = this.options %}
+        {% if options is empty %}
+            <p class="text-muted small mb-0">{{ 'spiderweb_sendcloud.checkout.no_options'|trans }}</p>
+        {% else %}
+            <h6 class="mb-3">{{ 'spiderweb_sendcloud.checkout.choose_delivery_option'|trans }}</h6>
+            {% for option in options %}
+                {% set identifier = option.checkout_identifier.value ?? (option.id ~ '') %}
+                {% set title = option.title ?? option.internal_title ?? identifier %}
+                {% set logoUrl = option.carrier.logo_url ?? '' %}
+                {% set carrierName = option.carrier.name ?? '' %}
+                {% set rate = option.shipping_rate ?? {} %}
+                {% set isSelected = this.selectedOptionCode == identifier %}
+
+                <div class="card {{ isSelected ? 'border-primary' : 'border' }} mb-2">
+                    <label class="d-flex align-items-center gap-3 card-body py-2 mb-0" style="cursor:pointer;">
+                        <input
+                            type="radio"
+                            class="flex-shrink-0"
+                            name="sendcloud_option_{{ this.methodId }}"
+                            value="{{ identifier }}"
+                            {{ isSelected ? 'checked' : '' }}
+                            data-action="change->live#action"
+                            data-live-action-param="select"
+                            data-live-option-code-param="{{ identifier }}"
+                        >
+                        {% if logoUrl %}
+                            <img
+                                src="{{ logoUrl }}"
+                                alt="{{ carrierName }}"
+                                style="height:24px;object-fit:contain;flex-shrink:0;"
+                            >
+                        {% endif %}
+                        <span class="flex-grow-1">{{ title }}</span>
+                        {% if rate.value is defined and rate.value is not null %}
+                            <span class="fw-semibold flex-shrink-0">
+                                {{ rate.value|number_format(2, ',', '\u{202F}') }}&nbsp;{{ rate.currency ?? 'EUR' }}
+                            </span>
+                        {% endif %}
+                    </label>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+</div>

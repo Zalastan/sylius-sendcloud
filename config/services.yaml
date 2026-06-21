@@ -23,7 +23,7 @@ services:
         tags:
             - { name: kernel.event_listener, event: workflow.sylius_shipment.transition.ship, priority: 10 }
 
-    SpiderWeb\Sylius\SendCloudPlugin\Controller\SendCloudCheckoutController:
+    SpiderWeb\Sylius\SendCloudPlugin\Twig\Component\SendCloudShippingOptionsComponent:
         autoconfigure: true
         arguments:
             $cache: '@cache.app'

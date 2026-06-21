@@ -32,6 +32,14 @@ final class SendCloudExtension extends Extension implements PrependExtensionInte
                 ],
             ]);
         }
+
+        $container->prependExtensionConfig('framework', [
+            'asset_mapper' => [
+                'paths' => [
+                    \dirname(__DIR__, 2) . '/assets' => '@spiderweb/sendcloud-plugin',
+                ],
+            ],
+        ]);
     }
 
     public function getAlias(): string
