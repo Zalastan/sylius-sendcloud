@@ -6,7 +6,6 @@ namespace SpiderWeb\Sylius\SendCloudPlugin\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\Callback;
@@ -22,10 +21,10 @@ final class SendCloudShippingCalculatorType extends AbstractType
                 'label' => 'spiderweb_sendcloud.form.public_key',
                 'constraints' => [new NotBlank()],
             ])
-            ->add('private_key', PasswordType::class, [
+            ->add('private_key', TextType::class, [
                 'label' => 'spiderweb_sendcloud.form.private_key',
-                'always_empty' => false,
                 'constraints' => [new NotBlank()],
+                'attr' => ['type' => 'password', 'autocomplete' => 'off'],
             ])
             ->add('from_country_code', TextType::class, [
                 'label' => 'spiderweb_sendcloud.form.from_country_code',

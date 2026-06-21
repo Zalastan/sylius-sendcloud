@@ -61,6 +61,14 @@ final class SendCloudShippingOptionsComponent
         }
 
         $config = $method->getConfiguration();
+        $publicKey = (string) ($config['public_key'] ?? '');
+        $privateKey = (string) ($config['private_key'] ?? '');
+
+        if ($publicKey === '' || $privateKey === '') {
+            $this->logger->warning('SendCloud: API credentials missing for shipping method {id}', ['id' => $this->methodId]);
+            $this->fetchFailed = true;
+            return $this->resolvedOptions = [];
+        }
 
         try {
             /** @var OrderInterface $order */
@@ -86,8 +94,8 @@ final class SendCloudShippingOptionsComponent
 
         try {
             $this->resolvedOptions = $this->client->getDeliveryOptions(
-                publicKey: $config['public_key'],
-                privateKey: $config['private_key'],
+                publicKey: $publicKey,
+                privateKey: $privateKey,
                 fromCountryCode: $config['from_country_code'],
                 fromPostalCode: $config['from_postal_code'],
                 toCountryCode: (string) $address->getCountryCode(),

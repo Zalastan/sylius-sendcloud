@@ -26,7 +26,7 @@ final class SendCloudExtension extends Extension implements PrependExtensionInte
                     'sylius_shop.checkout.select_shipping.content.form' => [
                         'sendcloud_checkout_options' => [
                             'template' => '@SendCloudPlugin/Checkout/_sendcloud_options.html.twig',
-                            'priority' => -200,
+                            'priority' => 50,
                         ],
                     ],
                 ],
