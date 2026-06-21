@@ -98,9 +98,10 @@ final class SendCloudShippingCalculator implements CalculatorInterface
             if ($optionCode === '') {
                 return 0;
             }
-            // Use cached price to avoid redundant API call
-            if (isset($cached['price_cents'])) {
-                return (int) $cached['price_cents'];
+            // Use cached price to avoid redundant API call (only when > 0)
+            $cachedPrice = isset($cached['price_cents']) ? (int) $cached['price_cents'] : null;
+            if ($cachedPrice !== null && $cachedPrice > 0) {
+                return $cachedPrice;
             }
         } else {
             // Legacy format: plain string option code

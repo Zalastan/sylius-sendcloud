@@ -92,14 +92,19 @@ final class SendCloudShippingOptionsComponent
             $weightKg = 0.5;
         }
 
+        $fromCountry = (string) ($config['from_country_code'] ?? '');
+        $fromPostal = (string) ($config['from_postal_code'] ?? '');
+        $toCountry = (string) $address->getCountryCode();
+        $toPostal = (string) $address->getPostcode();
+
         try {
             $this->resolvedOptions = $this->client->getDeliveryOptions(
                 publicKey: $publicKey,
                 privateKey: $privateKey,
-                fromCountryCode: $config['from_country_code'],
-                fromPostalCode: $config['from_postal_code'],
-                toCountryCode: (string) $address->getCountryCode(),
-                toPostalCode: (string) $address->getPostcode(),
+                fromCountryCode: $fromCountry,
+                fromPostalCode: $fromPostal,
+                toCountryCode: $toCountry,
+                toPostalCode: $toPostal,
                 weightKg: $weightKg,
                 totalPriceCents: $order->getItemsTotal(),
             );
@@ -110,6 +115,36 @@ final class SendCloudShippingOptionsComponent
             $this->fetchFailed = true;
             $this->resolvedOptions = [];
         }
+
+        // Enrich options that have no preconfigured shipping_rate by fetching real-time price
+        foreach ($this->resolvedOptions as &$option) {
+            if (($option['shipping_rate']['value'] ?? null) !== null) {
+                continue;
+            }
+            $optionCode = $option['checkout_identifier']['value'] ?? null;
+            if ($optionCode === null) {
+                continue;
+            }
+            try {
+                $priceCents = $this->client->getShippingOptionPrice(
+                    publicKey: $publicKey,
+                    privateKey: $privateKey,
+                    shippingOptionCode: $optionCode,
+                    fromCountryCode: $fromCountry,
+                    fromPostalCode: $fromPostal,
+                    toCountryCode: $toCountry,
+                    toPostalCode: $toPostal,
+                    weightKg: $weightKg,
+                );
+                $option['shipping_rate'] = [
+                    'value' => number_format($priceCents / 100, 2, '.', ''),
+                    'currency' => 'EUR',
+                ];
+            } catch (\Throwable) {
+                // no price available for this option
+            }
+        }
+        unset($option);
 
         return $this->resolvedOptions;
     }
