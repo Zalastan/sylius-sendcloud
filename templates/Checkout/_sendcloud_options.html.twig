@@ -24,6 +24,7 @@
                 class="mb-5"
                 data-controller="sendcloud-shipping-options"
                 data-sendcloud-shipping-options-method-id-value="{{ method.id }}"
+                data-sendcloud-shipping-options-method-code-value="{{ method.code }}"
             >
                 {{ component('sendcloud_shipping_options', { methodId: method.id }) }}
             </div>

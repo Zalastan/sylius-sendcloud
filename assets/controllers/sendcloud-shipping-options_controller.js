@@ -3,6 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     static values = {
         methodId: Number,
+        methodCode: String,
     };
 
     #observer = null;
@@ -42,6 +43,6 @@ export default class extends Controller {
     }
 
     #syliusRadio() {
-        return document.querySelector(`input[type="radio"][name*="[method]"][value="${this.methodIdValue}"]`);
+        return document.querySelector(`input[type="radio"][name*="[method]"][value="${this.methodCodeValue}"]`);
     }
 }
