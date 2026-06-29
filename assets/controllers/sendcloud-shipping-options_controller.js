@@ -26,7 +26,7 @@ export default class extends Controller {
         const { priceCents } = event.detail ?? {};
         this.#selectSyliusRadio();
         if (priceCents > 0) {
-            this.#updateShippingDisplay(priceCents);
+            this.#updateSummary(priceCents);
         }
     }
 
@@ -51,12 +51,29 @@ export default class extends Controller {
         return document.querySelector(`input[type="radio"][name*="[method]"][value="${this.methodCodeValue}"]`);
     }
 
-    #updateShippingDisplay(priceCents) {
-        const el = document.getElementById('sylius-shop-checkout-summary-shipping-total');
-        if (!el) return;
-        el.textContent = new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-        }).format(priceCents / 100);
+    #updateSummary(newShippingCents) {
+        const shippingEl = document.getElementById('sylius-shop-checkout-summary-shipping-total');
+        const orderTotalEl = document.getElementById('sylius-shop-checkout-summary-order-total');
+
+        if (!shippingEl) return;
+
+        // Compute new order total by replacing the shipping component (handles promotions transparently)
+        if (orderTotalEl) {
+            const currentShippingCents = this.#parseCents(shippingEl.textContent);
+            const currentTotalCents = this.#parseCents(orderTotalEl.textContent);
+            const newTotalCents = currentTotalCents - currentShippingCents + newShippingCents;
+            orderTotalEl.textContent = this.#formatCurrency(newTotalCents);
+        }
+
+        shippingEl.textContent = this.#formatCurrency(newShippingCents);
+    }
+
+    #parseCents(text) {
+        const cleaned = text.replace(/[\s  ]+/g, '').replace('€', '').replace(',', '.');
+        return Math.round(parseFloat(cleaned) * 100) || 0;
+    }
+
+    #formatCurrency(cents) {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
     }
 }
