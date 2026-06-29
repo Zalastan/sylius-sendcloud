@@ -6,35 +6,40 @@ export default class extends Controller {
         methodCode: String,
     };
 
-    #observer = null;
+    #handleOptionSelected = null;
 
     connect() {
-        this.#watchForSelection();
-        this.#syncSyliusRadio();
+        this.#handleOptionSelected = (event) => this.#onOptionSelected(event);
+        this.element.addEventListener('sendcloud:option:selected', this.#handleOptionSelected);
+        // Sync on connect in case the page was reloaded with a pre-selected option
+        this.#syncSyliusRadioFromAttribute();
     }
 
     disconnect() {
-        this.#observer?.disconnect();
-        this.#observer = null;
+        if (this.#handleOptionSelected) {
+            this.element.removeEventListener('sendcloud:option:selected', this.#handleOptionSelected);
+            this.#handleOptionSelected = null;
+        }
     }
 
-    #watchForSelection() {
-        const liveRoot = this.element.querySelector('[data-sendcloud-method-id]');
-        if (!liveRoot) return;
-
-        this.#observer = new MutationObserver(() => this.#syncSyliusRadio());
-        this.#observer.observe(liveRoot, {
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['data-sendcloud-selected'],
-        });
+    #onOptionSelected(event) {
+        const { priceCents } = event.detail ?? {};
+        this.#selectSyliusRadio();
+        if (priceCents > 0) {
+            this.#updateShippingDisplay(priceCents);
+        }
     }
 
-    #syncSyliusRadio() {
+    // Called on connect to handle pre-selected options (e.g. back-button navigation)
+    #syncSyliusRadioFromAttribute() {
         const liveRoot = this.element.querySelector('[data-sendcloud-method-id]');
         const selected = liveRoot?.getAttribute('data-sendcloud-selected');
-        if (!selected) return;
+        if (selected) {
+            this.#selectSyliusRadio();
+        }
+    }
 
+    #selectSyliusRadio() {
         const radio = this.#syliusRadio();
         if (radio && !radio.checked) {
             radio.checked = true;
@@ -44,5 +49,14 @@ export default class extends Controller {
 
     #syliusRadio() {
         return document.querySelector(`input[type="radio"][name*="[method]"][value="${this.methodCodeValue}"]`);
+    }
+
+    #updateShippingDisplay(priceCents) {
+        const el = document.getElementById('sylius-shop-checkout-summary-shipping-total');
+        if (!el) return;
+        el.textContent = new Intl.NumberFormat('fr-FR', {
+            style: 'currency',
+            currency: 'EUR',
+        }).format(priceCents / 100);
     }
 }

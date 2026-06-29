@@ -180,6 +180,14 @@ final class SendCloudShippingOptionsComponent
 
         $this->selectedOptionCode = $optionCode;
 
+        // Browser DOM event (bubbles up — used by sendcloud-shipping-options Stimulus controller)
+        $this->dispatchBrowserEvent(self::EVENT_OPTION_SELECTED, [
+            'methodId' => $this->methodId,
+            'optionCode' => $optionCode,
+            'priceCents' => $priceCents,
+        ]);
+
+        // LiveComponent event (for inter-component communication if needed)
         $this->emit(self::EVENT_OPTION_SELECTED, [
             'methodId' => $this->methodId,
             'optionCode' => $optionCode,
